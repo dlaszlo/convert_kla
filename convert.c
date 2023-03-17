@@ -12,6 +12,7 @@ const uint8_t ROTATE[4] = {6, 4, 2, 0};
 
 int main(void)
 {
+    checkKla("output.kla");
 
     Koala *kla = loadKla("input.kla");
 
@@ -19,7 +20,7 @@ int main(void)
 
     saveKla("output.kla", kla);
 
-    dispose(kla);
+    disposeKla(kla);
 
     return EXIT_SUCCESS;
 }
@@ -53,24 +54,24 @@ void clear_bitmap(uint8_t *bitmap, int p, uint8_t v, uint8_t nv)
 void optimize(Koala *kla)
 {
     uint8_t bitmap[sizeof(kla->bitmap) * 4];
-    uint8_t screen1[sizeof(kla->screen)];
-    uint8_t screen2[sizeof(kla->screen)];
+    uint8_t screen1[sizeof(kla->color.screen)];
+    uint8_t screen2[sizeof(kla->color.screen)];
 
     for (int i = 0; i < sizeof(bitmap); i++)
     {
         bitmap[i] = (kla->bitmap[i >> 2] >> ROTATE[i & 3]) & 3;
     }
-    for (int i = 0; i < sizeof(kla->screen); i++)
+    for (int i = 0; i < sizeof(kla->color.screen); i++)
     {
-        screen1[i] = kla->screen[i] >> 4;
-        screen2[i] = kla->screen[i] & 0x0f;
+        screen1[i] = kla->color.screen[i] >> 4;
+        screen2[i] = kla->color.screen[i] & 0x0f;
     }
 
-    for (int i = 0; i < sizeof(kla->screen); i++)
+    for (int i = 0; i < sizeof(kla->color.screen); i++)
     {
         if (check_bitmap(bitmap, i, 1))
         {
-            if (screen1[i] == kla->background)
+            if (screen1[i] == kla->color.background)
             {
                 printf("bitmap_screen1[%d] = 0\n", i);
                 clear_bitmap(bitmap, i, 1, 0);
@@ -85,7 +86,7 @@ void optimize(Koala *kla)
 
         if (check_bitmap(bitmap, i, 2))
         {
-            if (screen2[i] == kla->background)
+            if (screen2[i] == kla->color.background)
             {
                 printf("bitmap_screen2[%d] = 0\n", i);
                 clear_bitmap(bitmap, i, 2, 0);
@@ -100,23 +101,23 @@ void optimize(Koala *kla)
 
         if (check_bitmap(bitmap, i, 3))
         {
-            if (kla->color[i] == kla->background)
+            if (kla->color.color[i] == kla->color.background)
             {
                 printf("bitmap_color[%d] = 0\n", i);
                 clear_bitmap(bitmap, i, 3, 0);
-                kla->color[i] = 0;
+                kla->color.color[i] = 0;
             }
         }
-        else if (kla->color[i])
+        else if (kla->color.color[i])
         {
             printf("color[%d] = 0\n", i);
-            kla->color[i] = 0;
+            kla->color.color[i] = 0;
         }
 
         if (!check_bitmap(bitmap, i, 3) && check_bitmap(bitmap, i, 2))
         {
             printf("color[%d] <- screen2[%d]\n", i, i);
-            kla->color[i] = screen2[i];
+            kla->color.color[i] = screen2[i];
             clear_bitmap(bitmap, i, 2, 3);
             screen2[i] = 0;
         }
@@ -124,7 +125,7 @@ void optimize(Koala *kla)
         if (!check_bitmap(bitmap, i, 3) && check_bitmap(bitmap, i, 1))
         {
             printf("color[%d] <- screen1[%d]\n", i, i);
-            kla->color[i] = screen1[i];
+            kla->color.color[i] = screen1[i];
             clear_bitmap(bitmap, i, 1, 3);
             screen1[i] = 0;
         }
@@ -140,7 +141,7 @@ void optimize(Koala *kla)
 
     for (int i = 0; i < sizeof(screen1); i++)
     {
-        kla->screen[i] = (screen1[i] << 4) | screen2[i];
+        kla->color.screen[i] = (screen1[i] << 4) | screen2[i];
     }
     for (int i = 0; i < sizeof(bitmap); i++)
     {

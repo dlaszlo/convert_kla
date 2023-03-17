@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fade.h"
+#include "koala.h"
 
 const uint8_t FADE_NEW_VIC[][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -639,4 +640,25 @@ uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_
     uint8_t c1 = getColorFade(fade_table, (fr >> 4) & 0x0f, (to >> 4) & 0x0f, idx);
     uint8_t c2 = getColorFade(fade_table, fr & 0x0f, to & 0x0f, idx);
     return (c1 << 4) | c2;
+}
+
+Color *getTransition(enum FADE_TABLE fade_table, Color from, uint8_t to, uint8_t idx)
+{
+    Color *color;
+    if (!(color = malloc(sizeof(Color))))
+    {
+        printf("Memory allocation error");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < sizeof(from.color) / sizeof(from.color[0]); i++)
+    {
+        color->color[i] = getColorFade(fade_table, from.color[i], to, idx);
+        color->screen[i] = getScreenFade(fade_table, from.screen[i], to, idx);
+    }
+    return color;
+}
+
+void disposeColor(Color *color)
+{
+    free(color);
 }

@@ -32,14 +32,20 @@ Koala *loadKla(const char *filename)
     return kla;
 }
 
-void saveKla(const char *filename, Koala *kla)
+void checkKla(const char *filename)
 {
     struct stat buffer;
-    if (!stat(filename, &buffer)) {
+    if (!stat(filename, &buffer))
+    {
         printf("File %s already exists", filename);
         exit(EXIT_FAILURE);
     }
-    
+}
+
+void saveKla(const char *filename, Koala *kla)
+{
+    checkKla(filename);
+
     FILE *fout;
     if (!(fout = fopen(filename, "wb")))
     {
@@ -59,7 +65,7 @@ void saveKla(const char *filename, Koala *kla)
     }
 }
 
-void dispose(Koala *kla)
+void disposeKla(Koala *kla)
 {
     free(kla);
 }
