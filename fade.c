@@ -593,43 +593,54 @@ uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t
         exit(EXIT_FAILURE);
     }
 
-    uint8_t ret = 255;
-    int rows;
-    uint8_t(*table)[8];
-    if (fade_table == NEW_VIC)
-    {
-        table = (uint8_t(*)[8])FADE_NEW_VIC;
-        rows = sizeof(FADE_NEW_VIC) / sizeof(FADE_NEW_VIC[0]);
-    }
-    else if (fade_table == OLD_VIC)
-    {
-        table = (uint8_t(*)[8])FADE_OLD_VIC;
-        rows = sizeof(FADE_OLD_VIC) / sizeof(FADE_OLD_VIC[0]);
-    }
-    else if (fade_table == CHAR_MODE)
-    {
-        table = (uint8_t(*)[8])FADE_CHAR_MODE;
-        rows = sizeof(FADE_CHAR_MODE) / sizeof(FADE_CHAR_MODE[0]);
-    }
-    else
-    {
-        printf("Invalid fade table. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
-        exit(EXIT_FAILURE);
-    }
+    uint8_t ret = fr == 0 ? 0 : 255;
 
-    for (int i = 0; i < rows; i++)
+    if (ret)
     {
-        if (table[i][0] == fr && table[i][7] == to)
+        if (fade_table == NEW_VIC)
         {
-            ret = table[i][idx];
-            break;
+            for (int i = 0; i < 256; i++)
+            {
+                if (FADE_NEW_VIC[i][0] == fr && FADE_NEW_VIC[i][7] == to)
+                {
+                    ret = FADE_NEW_VIC[i][idx];
+                    break;
+                }
+            }
         }
-    }
+        else if (fade_table == OLD_VIC)
+        {
+            for (int i = 0; i < 256; i++)
+            {
+                if (FADE_OLD_VIC[i][0] == fr && FADE_OLD_VIC[i][7] == to)
+                {
+                    ret = FADE_OLD_VIC[i][idx];
+                    break;
+                }
+            }
+        }
+        else if (fade_table == CHAR_MODE)
+        {
+            for (int i = 0; i < 128; i++)
+            {
+                if (FADE_CHAR_MODE[i][0] == fr && FADE_CHAR_MODE[i][7] == to)
+                {
+                    ret = FADE_CHAR_MODE[i][idx];
+                    break;
+                }
+            }
+        }
+        else
+        {
+            printf("Invalid fade table. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
+            exit(EXIT_FAILURE);
+        }
 
-    if (ret > 15)
-    {
-        printf("Color not found. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
-        exit(EXIT_FAILURE);
+        if (ret > 15)
+        {
+            printf("Color not found. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
+            exit(EXIT_FAILURE);
+        }
     }
 
     return ret;
@@ -637,28 +648,16 @@ uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t
 
 uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx)
 {
-    uint8_t c1 = getColorFade(fade_table, (fr >> 4) & 0x0f, (to >> 4) & 0x0f, idx);
-    uint8_t c2 = getColorFade(fade_table, fr & 0x0f, to & 0x0f, idx);
+    uint8_t c1 = getColorFade(fade_table, (fr >> 4) & 0x0f, to, idx);
+    uint8_t c2 = getColorFade(fade_table, fr & 0x0f, to, idx);
     return (c1 << 4) | c2;
 }
 
-Color *getTransition(enum FADE_TABLE fade_table, Color from, uint8_t to, uint8_t idx)
+void getTransition(enum FADE_TABLE fade_table, Color *from, Color *dest, uint8_t to, uint8_t idx)
 {
-    Color *color;
-    if (!(color = malloc(sizeof(Color))))
+    for (int i = 0; i < sizeof(from->color) / sizeof(from->color[0]); i++)
     {
-        printf("Memory allocation error");
-        exit(EXIT_FAILURE);
+        dest->color[i] = getColorFade(fade_table, from->color[i], to, idx);
+        dest->screen[i] = getScreenFade(fade_table, from->screen[i], to, idx);
     }
-    for (int i = 0; i < sizeof(from.color) / sizeof(from.color[0]); i++)
-    {
-        color->color[i] = getColorFade(fade_table, from.color[i], to, idx);
-        color->screen[i] = getScreenFade(fade_table, from.screen[i], to, idx);
-    }
-    return color;
-}
-
-void disposeColor(Color *color)
-{
-    free(color);
 }

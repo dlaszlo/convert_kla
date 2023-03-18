@@ -1,18 +1,19 @@
-CC=gcc
+CC=g++
 CFLAGS=-I .
 DEPS = convert.h
 OBJ = convert.o koala.o fade.o
 
 %.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -g -c -o $@ $< $(CFLAGS)
 
 all: clean convert
 
 convert: $(OBJ)
-	$(CC) -ggdb -o $@ $^ $(CFLAGS)
+	$(CC) -g -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 
 clean:
-	del *.o 
-	del *.exe
+	rm -f *.o 
+	rm -f convert
+

@@ -1,14 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include "convert.h"
 #include "koala.h"
 #include "fade.h"
-
-int check_bitmap(uint8_t *bitmap, int p, uint8_t v);
-void clear_bitmap(uint8_t *bitmap, int p, uint8_t v, uint8_t nv);
-void optimize(Koala *kla);
-
-const uint8_t ROTATE[4] = {6, 4, 2, 0};
 
 int main(void)
 {
@@ -19,6 +15,8 @@ int main(void)
     optimize(kla);
 
     saveKla("output.kla", kla);
+
+    fade(kla, 1);
 
     disposeKla(kla);
 
@@ -153,5 +151,44 @@ void optimize(Koala *kla)
         {
             kla->bitmap[i >> 2] = bitmap[i] << ROTATE[i & 3];
         }
+    }
+}
+
+void fade(Koala *kla, uint8_t to)
+{
+    Color color;
+    Color buff;
+
+    memcpy(&buff, &(kla->color), sizeof(Color));
+
+    for (int f = 0; f < 8; f++)
+    {
+        getTransition(NEW_VIC, &(kla->color), &color, to, f);
+
+        printf("fade_%d          .proc\n", f);
+        
+        for (int c = 1; c < 256; c++) {
+            int first = 1;
+            for (int i = 0; i < sizeof(color.color); i++) {
+                if (color.color[i] == c && color.color[i] != buff.color[i]) {
+                    if (first) {
+                        printf("                lda     #$%02x\n", c);
+                        first = 0;
+                    }
+                    printf("                sta     color + %d\n", i);
+                }
+                if (color.screen[i] == c && color.screen[i] != buff.screen[i]) {
+                    if (first) {
+                        printf("                lda     #$%02x\n", c);
+                        first = 0;
+                    }
+                    printf("                sta     screen + %d\n", i);
+                }
+            }
+        }
+        printf("                rts\n");
+        printf("                .pend\n");
+
+        memcpy(&buff, &color, sizeof(Color));
     }
 }

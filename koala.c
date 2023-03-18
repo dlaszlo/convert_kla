@@ -6,7 +6,7 @@
 Koala *loadKla(const char *filename)
 {
     Koala *kla;
-    if (!(kla = malloc(sizeof(Koala))))
+    if (!(kla = (Koala *) malloc(sizeof(Koala))))
     {
         printf("Memory allocation error");
         exit(EXIT_FAILURE);
@@ -20,7 +20,7 @@ Koala *loadKla(const char *filename)
     int size = fread(kla, sizeof(Koala), 1, fin);
     if (size != 1 || ferror(fin))
     {
-        printf("%d %d %d \n", size, sizeof(Koala), sizeof(uint16_t));
+        printf("%d %ld %ld \n", size, sizeof(Koala), sizeof(uint16_t));
         printf("Error occured while reading file: %s", filename);
         exit(EXIT_FAILURE);
     }

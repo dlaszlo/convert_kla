@@ -2,6 +2,7 @@
 #define FADE_H
 
 #include <stdint.h>
+#include "koala.h"
 
 extern const uint8_t FADE_NEW_VIC[][8];
 extern const uint8_t FADE_OLD_VIC[][8];
@@ -16,5 +17,6 @@ enum FADE_TABLE
 
 uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx);
 uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx);
+void getTransition(enum FADE_TABLE fade_table, Color *from, Color *dest, uint8_t to, uint8_t idx);
 
 #endif
