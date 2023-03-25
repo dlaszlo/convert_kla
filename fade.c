@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "fade.h"
 #include "koala.h"
+#include "utils.h"
 
 const uint8_t FADE_NEW_VIC[][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -589,8 +590,7 @@ uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t
 {
     if (idx < 0 || idx > 7)
     {
-        printf("Invalid index. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
-        exit(EXIT_FAILURE);
+        die("Invalid index. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
     }
 
     uint8_t ret = fr == 0 ? 0 : 255;
@@ -632,14 +632,12 @@ uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t
         }
         else
         {
-            printf("Invalid fade table. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
-            exit(EXIT_FAILURE);
+            die("Invalid fade table. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
         }
 
         if (ret > 15)
         {
-            printf("Color not found. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
-            exit(EXIT_FAILURE);
+            die("Color not found. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
         }
     }
 
