@@ -158,31 +158,90 @@ void fade(Koala *kla, uint8_t to)
 {
     Color color;
     Color buff;
+    uint8_t color1, bcolor1 = 0x01;
+    uint8_t color2, bcolor2 = 0x00;
+    uint8_t color3, bcolor3 = 0x0c;
 
     memcpy(&buff, &(kla->color), sizeof(Color));
 
-    for (int f = 0; f < 8; f++)
+    for (int f = 1; f < 8; f++)
     {
         getTransition(NEW_VIC, &(kla->color), &color, to, f);
+        color1 = getColorFade(NEW_VIC, 0x01, 0x01, f, 1);
+        color2 = getColorFade(NEW_VIC, 0x00, 0x01, f, 1);
+        color3 = getColorFade(NEW_VIC, 0x0c, 0x01, f, 1);
 
         printf("fade_%d          .proc\n", f);
-        
-        for (int c = 1; c < 256; c++) {
+
+        for (int c = 0; c < 256; c++)
+        {
             int first = 1;
-            for (int i = 0; i < sizeof(color.color); i++) {
-                if (color.color[i] == c && color.color[i] != buff.color[i]) {
-                    if (first) {
-                        printf("                lda     #$%02x\n", c);
-                        first = 0;
-                    }
-                    printf("                sta     color + %d\n", i);
+            if (color.background == c && color.background != buff.background)
+            {
+                if (first)
+                {
+                    printf("                lda     #$%02x\n", c);
+                    first = 0;
                 }
-                if (color.screen[i] == c && color.screen[i] != buff.screen[i]) {
-                    if (first) {
-                        printf("                lda     #$%02x\n", c);
-                        first = 0;
+                printf("                sta     $d020\n");
+                printf("                sta     $d021\n");
+            }
+            if (color1 == c & color1 != bcolor1)
+            {
+                if (first)
+                {
+                    printf("                lda     #$%02x\n", c);
+                    first = 0;
+                }
+                printf("                sta     $d027\n");
+                printf("                sta     $d028\n");
+                printf("                sta     $d029\n");
+                printf("                sta     $d02a\n");
+                printf("                sta     $d02b\n");
+                printf("                sta     $d02c\n");
+                printf("                sta     $d02d\n");
+                printf("                sta     $d02e\n");
+            }
+            if (color2 == c & color2 != bcolor2)
+            {
+                if (first)
+                {
+                    printf("                lda     #$%02x\n", c);
+                    first = 0;
+                }
+                printf("                sta     $d025\n");
+            }
+            if (color3 == c & color3 != bcolor3)
+            {
+                if (first)
+                {
+                    printf("                lda     #$%02x\n", c);
+                    first = 0;
+                }
+                printf("                sta     $d026\n");
+            }
+            for (int i = 0; i < sizeof(color.color); i++)
+            {
+                if (c != 0)
+                {
+                    if (color.color[i] == c && color.color[i] != buff.color[i])
+                    {
+                        if (first)
+                        {
+                            printf("                lda     #$%02x\n", c);
+                            first = 0;
+                        }
+                        printf("                sta     COLOR + %d\n", i);
                     }
-                    printf("                sta     screen + %d\n", i);
+                    if (color.screen[i] == c && color.screen[i] != buff.screen[i])
+                    {
+                        if (first)
+                        {
+                            printf("                lda     #$%02x\n", c);
+                            first = 0;
+                        }
+                        printf("                sta     SCREEN + %d\n", i);
+                    }
                 }
             }
         }
@@ -190,5 +249,8 @@ void fade(Koala *kla, uint8_t to)
         printf("                .pend\n");
 
         memcpy(&buff, &color, sizeof(Color));
+        bcolor1 = color1;
+        bcolor2 = color2;
+        bcolor3 = color3;
     }
 }

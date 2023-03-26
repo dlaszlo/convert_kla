@@ -586,14 +586,14 @@ const uint8_t FADE_CHAR_MODE[][8] = {
     {0x06, 0x02, 0x04, 0x05, 0x03, 0x07, 0x07, 0x07},
     {0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07}};
 
-uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx)
+uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx, uint8_t background)
 {
     if (idx < 0 || idx > 7)
     {
         die("Invalid index. Table: %d; From: %d; To: %d; Index: %d", fade_table, fr, to, idx);
     }
 
-    uint8_t ret = fr == 0 ? 0 : 255;
+    uint8_t ret = !background && fr == 0 ? 0 : 255;
 
     if (ret)
     {
@@ -646,8 +646,8 @@ uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t
 
 uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx)
 {
-    uint8_t c1 = getColorFade(fade_table, (fr >> 4) & 0x0f, to, idx);
-    uint8_t c2 = getColorFade(fade_table, fr & 0x0f, to, idx);
+    uint8_t c1 = getColorFade(fade_table, (fr >> 4) & 0x0f, to, idx, 0);
+    uint8_t c2 = getColorFade(fade_table, fr & 0x0f, to, idx, 0);
     return (c1 << 4) | c2;
 }
 
@@ -655,7 +655,9 @@ void getTransition(enum FADE_TABLE fade_table, Color *from, Color *dest, uint8_t
 {
     for (int i = 0; i < sizeof(from->color) / sizeof(from->color[0]); i++)
     {
-        dest->color[i] = getColorFade(fade_table, from->color[i], to, idx);
+        dest->color[i] = getColorFade(fade_table, from->color[i], to, idx, 0);
         dest->screen[i] = getScreenFade(fade_table, from->screen[i], to, idx);
     }
+    dest->background = getColorFade(fade_table, from->background, to, idx, 1
+    );
 }
