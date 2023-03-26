@@ -14,6 +14,8 @@ int main(void)
 
     optimize(kla);
 
+    add_mask(kla);
+
     saveKla("output.kla", kla);
 
     fade(kla, 1);
@@ -21,6 +23,19 @@ int main(void)
     disposeKla(kla);
 
     return EXIT_SUCCESS;
+}
+
+void add_mask(Koala *kla)
+{
+    for (int i = 40 * 23 * 8; i < 40 * 25 * 8; i++)
+    {
+        kla->bitmap[i] = 0xff;
+    }
+    for (int i = 40 * 23; i < 40 * 25; i++)
+    {
+        kla->color.color[i] = 0;
+        kla->color.screen[i] = 0;
+    }
 }
 
 int check_bitmap(uint8_t *bitmap, int p, uint8_t v)
@@ -51,7 +66,7 @@ void clear_bitmap(uint8_t *bitmap, int p, uint8_t v, uint8_t nv)
 
 void optimize(Koala *kla)
 {
-    uint8_t bitmap[sizeof(kla->bitmap) * 4];
+    uint8_t bitmap[32000];
     uint8_t screen1[sizeof(kla->color.screen)];
     uint8_t screen2[sizeof(kla->color.screen)];
 
@@ -156,22 +171,37 @@ void optimize(Koala *kla)
 
 void fade(Koala *kla, uint8_t to)
 {
+    uint8_t bitmap[32000];
     Color color;
     Color buff;
     uint8_t color1, bcolor1 = 0x01;
     uint8_t color2, bcolor2 = 0x00;
     uint8_t color3, bcolor3 = 0x0c;
+    uint8_t mask1[sizeof(color.color)];
+    uint8_t mask2[sizeof(color.color)];
+    uint8_t mask3[sizeof(color.color)];
+
+    for (int i = 0; i < sizeof(bitmap); i++)
+    {
+        bitmap[i] = (kla->bitmap[i >> 2] >> ROTATE[i & 3]) & 3;
+    }
+    for (int i = 0; i < sizeof(color.color); i++)
+    {
+        mask1[i] = check_bitmap(bitmap, i, 1);
+        mask2[i] = check_bitmap(bitmap, i, 2);
+        mask3[i] = check_bitmap(bitmap, i, 3);
+    }
 
     memcpy(&buff, &(kla->color), sizeof(Color));
 
     for (int f = 1; f < 8; f++)
     {
-        getTransition(NEW_VIC, &(kla->color), &color, to, f);
+        getTransition(NEW_VIC, &(kla->color), &color, to, f, mask1, mask2, mask3);
         color1 = getColorFade(NEW_VIC, 0x01, 0x01, f, 1);
         color2 = getColorFade(NEW_VIC, 0x00, 0x01, f, 1);
         color3 = getColorFade(NEW_VIC, 0x0c, 0x01, f, 1);
 
-        printf("fade_%d          .proc\n", f);
+        printf("\nfade_%d          .proc\n", f);
 
         for (int c = 0; c < 256; c++)
         {
@@ -222,26 +252,23 @@ void fade(Koala *kla, uint8_t to)
             }
             for (int i = 0; i < sizeof(color.color); i++)
             {
-                if (c != 0)
+                if (color.color[i] == c && color.color[i] != buff.color[i])
                 {
-                    if (color.color[i] == c && color.color[i] != buff.color[i])
+                    if (first)
                     {
-                        if (first)
-                        {
-                            printf("                lda     #$%02x\n", c);
-                            first = 0;
-                        }
-                        printf("                sta     COLOR + %d\n", i);
+                        printf("                lda     #$%02x\n", c);
+                        first = 0;
                     }
-                    if (color.screen[i] == c && color.screen[i] != buff.screen[i])
+                    printf("                sta     COLOR + %d\n", i);
+                }
+                if (color.screen[i] == c && color.screen[i] != buff.screen[i])
+                {
+                    if (first)
                     {
-                        if (first)
-                        {
-                            printf("                lda     #$%02x\n", c);
-                            first = 0;
-                        }
-                        printf("                sta     SCREEN + %d\n", i);
+                        printf("                lda     #$%02x\n", c);
+                        first = 0;
                     }
+                    printf("                sta     SCREEN + %d\n", i);
                 }
             }
         }

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "koala.h"
 
+void add_mask(Koala *kla);
 int check_bitmap(uint8_t *bitmap, int p, uint8_t v);
 void clear_bitmap(uint8_t *bitmap, int p, uint8_t v, uint8_t nv);
 void optimize(Koala *kla);
