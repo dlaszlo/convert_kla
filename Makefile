@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-I .
 DEPS = convert.h
-OBJ = convert.o koala.o fade.o utils.o
+OBJ = convert.o koala.o fade.o utils.o options.o
 
 %.o: %.c $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGS)

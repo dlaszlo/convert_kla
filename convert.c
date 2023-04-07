@@ -3,11 +3,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include <getopt.h>
 #include "convert.h"
 #include "koala.h"
 #include "fade.h"
 #include "utils.h"
+#include "options.h"
 
 void fade_out(const char *input_file, const char *sprite_from, const char *sprite_to, const char *output_file, const char *output_source, uint8_t color)
 {
@@ -18,7 +18,7 @@ void fade_out(const char *input_file, const char *sprite_from, const char *sprit
     saveKla(output_file, kla);
     Koala *dest = getDestImg(kla, color);
 
-    if (sprite_from && sprite_to)
+    if (sprite_from && strlen(sprite_from) && sprite_to && strlen(sprite_to))
     {
         SpriteColor spriteColorFrom;
         SpriteColor spriteColorTo;
@@ -44,7 +44,7 @@ void fade_in(const char *input_file, const char *sprite_from, const char *sprite
     Koala *dest = getDestImg(kla, color);
     saveKla(output_file, dest);
 
-    if (sprite_from && sprite_to)
+    if (sprite_from && strlen(sprite_from) && sprite_to && strlen(sprite_to))
     {
         SpriteColor spriteColorFrom;
         SpriteColor spriteColorTo;
@@ -63,8 +63,18 @@ void fade_in(const char *input_file, const char *sprite_from, const char *sprite
 
 int main(int argc, char *argv[])
 {
-    fade_out("input.kla", "sprite_colors_from.txt", "sprite_colors_to.txt", "output1.kla", "fadeout.asm", 0x01);
-    fade_in("input.kla", NULL, NULL, "output2.kla", "fadein.asm", 0x01);
+    Options options;
+
+    parse_options(argc, argv, &options);
+
+    if (options.mode == MODE_FADE_IN)
+    {
+        fade_in(options.input_filename, options.sprite_colors_from, options.sprite_colors_to, options.output_filename, options.output_source, options.color);
+    }
+    else if (options.mode == MODE_FADE_OUT)
+    {
+        fade_out(options.input_filename, options.sprite_colors_from, options.sprite_colors_to, options.output_filename, options.output_source, options.color);
+    }
     return EXIT_SUCCESS;
 }
 
