@@ -3,56 +3,72 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
 #include "convert.h"
 #include "koala.h"
 #include "fade.h"
 #include "utils.h"
 
-void process1()
+void fade_out(const char *input_file, const char *sprite_from, const char *sprite_to, const char *output_file, const char *output_source, uint8_t color)
 {
-    printf("********** PROCESS1 **********\n");
-    /* checkKla("output.kla"); */
-    Koala *kla = loadKla("input.kla");
+    /* checkKla(output_file); */
+    Koala *kla = loadKla(input_file);
     optimize(kla);
     add_mask(kla);
-    saveKla("output.kla", kla);
-    Koala *dest = getDestImg(kla);
+    saveKla(output_file, kla);
+    Koala *dest = getDestImg(kla, color);
 
-    SpriteColor spriteColorFrom = {
-        .color1 = 0x01,
-        .color2 = 0x00,
-        .color3 = 0x0c};
+    if (sprite_from && sprite_to)
+    {
+        SpriteColor spriteColorFrom;
+        SpriteColor spriteColorTo;
+        read_sprinte_colors(sprite_from, &spriteColorFrom);
+        read_sprinte_colors(sprite_to, &spriteColorTo);
+        fade(kla, dest, &spriteColorFrom, &spriteColorTo, output_source);
+    }
+    else
+    {
+        fade(kla, dest, NULL, NULL, output_source);
+    }
 
-    SpriteColor spriteColorTo = {
-        .color1 = 0x01,
-        .color2 = 0x01,
-        .color3 = 0x01};
-
-    fade(kla, dest, &spriteColorFrom, &spriteColorTo, "fadeout.asm");
     free(dest);
     free(kla);
 }
 
-void process2()
+void fade_in(const char *input_file, const char *sprite_from, const char *sprite_to, const char *output_file, const char *output_source, uint8_t color)
 {
-    printf("********** PROCESS2 **********\n");
-    /* checkKla("output2.kla"); */
-    Koala *kla = loadKla("output.kla");
-    Koala *dest = getDestImg(kla);
-    saveKla("output2.kla", dest);
-    fade(dest, kla, NULL, NULL, "fadein.asm");
+    /* checkKla(output_file); */
+    Koala *kla = loadKla(input_file);
+    optimize(kla);
+    add_mask(kla);
+    Koala *dest = getDestImg(kla, color);
+    saveKla(output_file, dest);
+
+    if (sprite_from && sprite_to)
+    {
+        SpriteColor spriteColorFrom;
+        SpriteColor spriteColorTo;
+        read_sprinte_colors(sprite_from, &spriteColorFrom);
+        read_sprinte_colors(sprite_to, &spriteColorTo);
+        fade(dest, kla, &spriteColorFrom, &spriteColorTo, output_source);
+    }
+    else
+    {
+        fade(dest, kla, NULL, NULL, output_source);
+    }
+
     free(dest);
     free(kla);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    process1();
-    process2();
+    fade_out("input.kla", "sprite_colors_from.txt", "sprite_colors_to.txt", "output1.kla", "fadeout.asm", 0x01);
+    fade_in("input.kla", NULL, NULL, "output2.kla", "fadein.asm", 0x01);
     return EXIT_SUCCESS;
 }
 
-Koala *getDestImg(Koala *kla)
+Koala *getDestImg(Koala *kla, uint8_t color)
 {
     Koala *dest;
     if (!(dest = (Koala *)malloc(sizeof(Koala))))
@@ -68,16 +84,16 @@ Koala *getDestImg(Koala *kla)
     {
         if (mask->mask3[i])
         {
-            dest->color.color[i] = 0x01;
+            dest->color.color[i] = color & 0x0f;
         }
         uint8_t c = 0;
         if (mask->mask2[i])
         {
-            c = 0x01;
+            c = color & 0x0f;
         }
         if (mask->mask1[i])
         {
-            c = c | 0x10;
+            c = c | ((color & 0x0f) << 4);
         }
         if (c)
         {
@@ -101,6 +117,25 @@ void add_mask(Koala *kla)
         kla->color.color[i] = 0;
         kla->color.screen[i] = 0;
     }
+}
+
+void read_sprinte_colors(const char *filename, SpriteColor *sprite_color)
+{
+    FILE *fin;
+    if (!(fin = fopen(filename, "r")))
+    {
+        die("Error occured: %d, %s", errno, strerror(errno));
+    }
+    int temp1, temp2, temp3;
+    int ret = fscanf(fin, "%x %x %x", &temp1, &temp2, &temp3);
+    if (ret != 3)
+    {
+        die("Error occured, invalid file format: %s", filename);
+    }
+    sprite_color->color1 = (uint8_t)temp1;
+    sprite_color->color2 = (uint8_t)temp2;
+    sprite_color->color3 = (uint8_t)temp3;
+    fclose(fin);
 }
 
 void fade(Koala *kla, Koala *dest, SpriteColor *spriteColorFrom, SpriteColor *spriteColorTo, const char *filename)

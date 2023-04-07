@@ -2,6 +2,5 @@
 *.o
 *.exe
 *.kla
-*.txt
 *.asm
 convert
