@@ -26,6 +26,13 @@ typedef struct __attribute__((packed))
     uint8_t background;
 } Mask;
 
+typedef struct __attribute__((packed))
+{
+    uint8_t color1;
+    uint8_t color2;
+    uint8_t color3;
+} SpriteColor;
+
 const uint8_t ROTATE[4] = {6, 4, 2, 0};
 
 void checkKla(const char *filename);

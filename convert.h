@@ -5,8 +5,8 @@
 
 void add_mask(Koala *kla);
 void optimize(Koala *kla);
-void fadeOut(Koala *kla, uint8_t to);
 Koala *getDestImg(Koala *kla);
-void fadeIn(Koala *from, Koala *to);
+void fade(Koala *kla, Koala *dest, SpriteColor *spriteColorFrom, SpriteColor *spriteColorTo, const char *filename);
+
 
 #endif

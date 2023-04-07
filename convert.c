@@ -13,13 +13,24 @@ void process1()
     printf("********** PROCESS1 **********\n");
     /* checkKla("output.kla"); */
     Koala *kla = loadKla("input.kla");
-    Koala *to = loadKla("input.kla");
     optimize(kla);
     add_mask(kla);
     saveKla("output.kla", kla);
-    fadeOut(kla, 1);
+    Koala *dest = getDestImg(kla);
+
+    SpriteColor spriteColorFrom = {
+        .color1 = 0x01,
+        .color2 = 0x00,
+        .color3 = 0x0c};
+
+    SpriteColor spriteColorTo = {
+        .color1 = 0x01,
+        .color2 = 0x01,
+        .color3 = 0x01};
+
+    fade(kla, dest, &spriteColorFrom, &spriteColorTo, "fadeout.asm");
+    free(dest);
     free(kla);
-    free(to);
 }
 
 void process2()
@@ -29,8 +40,16 @@ void process2()
     Koala *kla = loadKla("output.kla");
     Koala *dest = getDestImg(kla);
     saveKla("output2.kla", dest);
+    fade(dest, kla, NULL, NULL, "fadein.asm");
     free(dest);
     free(kla);
+}
+
+int main(void)
+{
+    process1();
+    process2();
+    return EXIT_SUCCESS;
 }
 
 Koala *getDestImg(Koala *kla)
@@ -54,11 +73,11 @@ Koala *getDestImg(Koala *kla)
         uint8_t c = 0;
         if (mask->mask2[i])
         {
-            c = 0x40;
+            c = 0x01;
         }
         if (mask->mask1[i])
         {
-            c = c | 0x01;
+            c = c | 0x10;
         }
         if (c)
         {
@@ -69,13 +88,6 @@ Koala *getDestImg(Koala *kla)
     free(mask);
 
     return dest;
-}
-
-int main(void)
-{
-    process1();
-    process2();
-    return EXIT_SUCCESS;
 }
 
 void add_mask(Koala *kla)
@@ -91,33 +103,32 @@ void add_mask(Koala *kla)
     }
 }
 
-void fadeIn(Koala *from, Koala *to)
-{
-}
-
-void fadeOut(Koala *kla, uint8_t to)
+void fade(Koala *kla, Koala *dest, SpriteColor *spriteColorFrom, SpriteColor *spriteColorTo, const char *filename)
 {
     FILE *fout;
-    if (!(fout = fopen("fadeout.asm", "w")))
+    if (!(fout = fopen(filename, "w")))
     {
         die("Error occured: %d, %s", errno, strerror(errno));
     }
 
-    Mask *mask = getMask(kla);
+    Mask *mask = getMask(dest);
     Color color;
     Color buff;
-    uint8_t color1, bcolor1 = 0x01;
-    uint8_t color2, bcolor2 = 0x00;
-    uint8_t color3, bcolor3 = 0x0c;
+    uint8_t color1, bcolor1 = spriteColorFrom && spriteColorTo ? spriteColorFrom->color1 : 0;
+    uint8_t color2, bcolor2 = spriteColorFrom && spriteColorTo ? spriteColorFrom->color2 : 0;
+    uint8_t color3, bcolor3 = spriteColorFrom && spriteColorTo ? spriteColorFrom->color3 : 0;
 
     memcpy(&buff, &(kla->color), sizeof(Color));
     fprintf(fout, "\n.section        code\n");
     for (int f = 1; f < 8; f++)
     {
-        getTransitionTo(NEW_VIC, &(kla->color), &color, to, f, mask);
-        color1 = getColorFade(NEW_VIC, 0x01, 0x01, f, 1);
-        color2 = getColorFade(NEW_VIC, 0x00, 0x01, f, 1);
-        color3 = getColorFade(NEW_VIC, 0x0c, 0x01, f, 1);
+        getTransition(NEW_VIC, &(kla->color), &color, &(dest->color), f, mask);
+        if (spriteColorFrom && spriteColorTo)
+        {
+            color1 = getColorFade(NEW_VIC, spriteColorFrom->color1, spriteColorTo->color1, f, 1);
+            color2 = getColorFade(NEW_VIC, spriteColorFrom->color2, spriteColorTo->color2, f, 1);
+            color3 = getColorFade(NEW_VIC, spriteColorFrom->color3, spriteColorTo->color3, f, 1);
+        }
 
         fprintf(fout, "\nfade_%d          .proc\n", f);
 
@@ -134,7 +145,7 @@ void fadeOut(Koala *kla, uint8_t to)
                 fprintf(fout, "                sta     $d020\n");
                 fprintf(fout, "                sta     $d021\n");
             }
-            if (color1 == c & color1 != bcolor1)
+            if (spriteColorFrom && spriteColorTo && color1 == c & color1 != bcolor1)
             {
                 if (first)
                 {
@@ -150,7 +161,7 @@ void fadeOut(Koala *kla, uint8_t to)
                 fprintf(fout, "                sta     $d02d\n");
                 fprintf(fout, "                sta     $d02e\n");
             }
-            if (color2 == c & color2 != bcolor2)
+            if (spriteColorFrom && spriteColorTo && color2 == c & color2 != bcolor2)
             {
                 if (first)
                 {
@@ -159,7 +170,7 @@ void fadeOut(Koala *kla, uint8_t to)
                 }
                 fprintf(fout, "                sta     $d025\n");
             }
-            if (color3 == c & color3 != bcolor3)
+            if (spriteColorFrom && spriteColorTo && color3 == c & color3 != bcolor3)
             {
                 if (first)
                 {

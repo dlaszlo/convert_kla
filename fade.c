@@ -651,23 +651,12 @@ uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_
     return (c1 << 4) | c2;
 }
 
-void getTransitionTo(enum FADE_TABLE fade_table, Color *from, Color *dest, uint8_t to, uint8_t idx, Mask *mask)
+void getTransition(enum FADE_TABLE fade_table, Color *from, Color *dest, Color *to, uint8_t idx, Mask *mask)
 {
-    for (int i = 0; i < sizeof(from->color) / sizeof(from->color[0]); i++)
+    for (int i = 0; i < 1000; i++)
     {
-        dest->color[i] = getColorFade(fade_table, from->color[i], to, idx, mask->mask3[i]);
-        uint8_t screenTo = (to & 0x0f) | ((to & 0x0f) << 4);
-        dest->screen[i] = getScreenFade(fade_table, from->screen[i], screenTo, idx, mask->mask1[i], mask->mask2[i]);
+        dest->color[i] = getColorFade(fade_table, from->color[i], to->color[i], idx, mask->mask3[i]);
+        dest->screen[i] = getScreenFade(fade_table, from->screen[i], to->screen[i], idx, mask->mask1[i], mask->mask2[i]);
     }
-    dest->background = getColorFade(fade_table, from->background, to, idx, 1);
-}
-
-void getTransitionFrom(enum FADE_TABLE fade_table, Color *to, Color *dest, Color *fr, uint8_t idx, Mask *mask)
-{
-    for (int i = 0; i < sizeof(to->color) / sizeof(to->color[0]); i++)
-    {
-        dest->color[i] = getColorFade(fade_table, fr->color[i], to->color[i], idx, mask->mask3[i]);
-        dest->screen[i] = getScreenFade(fade_table, fr->screen[i], to->screen[i], idx, mask->mask1[i], mask->mask2[i]);
-    }
-    dest->background = getColorFade(fade_table, fr->background, to->background, idx, 1);
+    dest->background = getColorFade(fade_table, from->background, to->background, idx, 1);
 }

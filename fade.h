@@ -17,6 +17,5 @@ enum FADE_TABLE
 
 uint8_t getColorFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx, uint8_t mask);
 uint8_t getScreenFade(enum FADE_TABLE fade_table, uint8_t fr, uint8_t to, uint8_t idx, uint8_t mask1, uint8_t mask2);
-void getTransitionTo(enum FADE_TABLE fade_table, Color *from, Color *dest, uint8_t to, uint8_t idx, Mask *mask);
-void getTransitionFrom(enum FADE_TABLE fade_table, Color *to, Color *dest, Color *fr, uint8_t idx, Mask *mask);
+void getTransition(enum FADE_TABLE fade_table, Color *from, Color *dest, Color *to, uint8_t idx, Mask *mask);
 #endif
