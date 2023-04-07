@@ -75,6 +75,10 @@ int main(int argc, char *argv[])
     {
         fade_out(options.input_filename, options.sprite_colors_from, options.sprite_colors_to, options.output_filename, options.output_source, options.color);
     }
+    else
+    {
+        die("Invalid mode.");
+    }
     return EXIT_SUCCESS;
 }
 
