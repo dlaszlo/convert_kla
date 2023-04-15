@@ -50,7 +50,8 @@ void parse_options(int argc, char *argv[], Options *options)
         int c = getopt_long(argc, argv, "-:i:f:t:o:s:c:", long_options, &option_index);
         if (c == -1)
             break;
-
+            
+        int temp;
         switch (c)
         {
         case 0:
@@ -102,7 +103,6 @@ void parse_options(int argc, char *argv[], Options *options)
             break;
 
         case 'c':
-            int temp;
             if (strlen(optarg) != 2 || sscanf(optarg, "%x", &temp) != 1 || temp < 0 || temp > 15)
             {
                 usage();

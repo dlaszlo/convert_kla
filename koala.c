@@ -7,6 +7,8 @@
 #include "koala.h"
 #include "utils.h"
 
+const uint8_t ROTATE[4] = {6, 4, 2, 0};
+
 Koala *loadKla(const char *filename)
 {
     Koala *kla;

@@ -4,3 +4,7 @@
 *.kla
 *.asm
 convert
+Makefile
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake

@@ -33,7 +33,7 @@ typedef struct __attribute__((packed))
     uint8_t color3;
 } SpriteColor;
 
-const uint8_t ROTATE[4] = {6, 4, 2, 0};
+const extern uint8_t ROTATE[4];
 
 void checkKla(const char *filename);
 
